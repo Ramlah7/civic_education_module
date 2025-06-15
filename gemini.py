@@ -7,12 +7,15 @@ from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout,
     QHBoxLayout, QListWidget, QTextBrowser, QLineEdit, QPushButton, QFrame, QLabel
 )
-from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve
-from PyQt5.QtGui import QFont, QColor, QPalette
+from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve, QTimer
+from PyQt5.QtGui import QFont
+
 
 class CivicEducationApp(QMainWindow):
+
     def __init__(self):
         super().__init__()
+
         self.setWindowTitle("Civic Education System")
         self.resize(1000, 600)
 
@@ -33,6 +36,7 @@ class CivicEducationApp(QMainWindow):
 
         self.topics = self.load_topics()
         self.init_ui()
+        self.setup_background_animation()
 
     def load_topics(self):
         try:
@@ -55,12 +59,12 @@ class CivicEducationApp(QMainWindow):
         self.title.setAlignment(Qt.AlignCenter)
         self.title.setStyleSheet("""
             QLabel {
-                font-size: 30px;
+                font-size: 32px;
                 font-weight: bold;
-                color: #2C3E50;
+                color: #2E4053;
                 background-color: #D6EAF8;
                 padding: 16px;
-                border-bottom: 2px solid #85C1E9;
+                border-bottom: 2px solid #3498DB;
             }
         """)
         outer_layout.addWidget(self.title)
@@ -74,10 +78,10 @@ class CivicEducationApp(QMainWindow):
         self.search_bar.textChanged.connect(self.filter_topics)
         self.search_bar.setStyleSheet("""
             QLineEdit {
-                padding: 10px;
-                border-radius: 10px;
-                border: 1px solid #A9CCE3;
-                font-size: 14px;
+                padding: 12px;
+                border-radius: 12px;
+                border: 1px solid #85C1E9;
+                font-size: 16px;
             }
         """)
         sidebar.addWidget(self.search_bar)
@@ -88,16 +92,17 @@ class CivicEducationApp(QMainWindow):
         self.topic_list.setStyleSheet("""
             QListWidget {
                 border: none;
-                font-size: 14px;
-                background-color: #F0F8FF;
-                padding: 5px;
+                font-size: 16px;
+                background-color: #FBFCFC;
+                padding: 10px;
             }
             QListWidget::item:selected {
-                background-color: #AED6F1;
-                color: #1B2631;
+                background-color: #5DADE2;
+                color: white;
             }
         """)
         sidebar.addWidget(self.topic_list)
+
         layout.addLayout(sidebar, 2)
 
         self.content_stack = QVBoxLayout()
@@ -108,12 +113,12 @@ class CivicEducationApp(QMainWindow):
         self.content_card.setFrameShape(QFrame.StyledPanel)
         self.content_card.setStyleSheet("""
             QTextBrowser {
-                background-color: #FBFCFC;
-                border-radius: 15px;
-                padding: 20px;
-                font-size: 15px;
+                background-color: rgba(255, 255, 255, 0.85);
+                border-radius: 18px;
+                padding: 24px;
+                font-size: 16px;
                 font-family: 'Segoe UI';
-                border: 1px solid #D6DBDF;
+                border: 1px solid #D5DBDB;
             }
         """)
 
@@ -123,12 +128,12 @@ class CivicEducationApp(QMainWindow):
         self.chat_display = QTextBrowser()
         self.chat_display.setStyleSheet("""
             QTextBrowser {
-                background-color: #FAFAFA;
-                border-radius: 10px;
-                padding: 15px;
-                font-size: 14px;
+                background-color: rgba(250, 250, 250, 0.8);
+                border-radius: 12px;
+                padding: 20px;
+                font-size: 15px;
                 font-family: 'Segoe UI';
-                border: 1px solid #D6DBDF;
+                border: 1px solid #D5DBDB;
             }
         """)
 
@@ -136,10 +141,10 @@ class CivicEducationApp(QMainWindow):
         self.chat_input.setPlaceholderText("Ask your civic question...")
         self.chat_input.setStyleSheet("""
             QLineEdit {
-                border: 1px solid #A9CCE3;
-                border-radius: 8px;
-                padding: 10px;
-                font-size: 14px;
+                border: 1px solid #85C1E9;
+                border-radius: 10px;
+                padding: 12px;
+                font-size: 15px;
             }
         """)
 
@@ -147,14 +152,14 @@ class CivicEducationApp(QMainWindow):
         self.chat_send.clicked.connect(self.handle_chat)
         self.chat_send.setStyleSheet("""
             QPushButton {
-                background-color: #58D68D;
+                background-color: #76D7C4;
                 color: white;
-                border-radius: 8px;
-                padding: 10px 20px;
+                border-radius: 12px;
+                padding: 12px 24px;
                 font-weight: bold;
             }
             QPushButton:hover {
-                background-color: #45B39D;
+                background-color: #48C9B0;
             }
         """)
 
@@ -168,6 +173,20 @@ class CivicEducationApp(QMainWindow):
         self.content_stack.addWidget(self.chat_box)
 
         self.topic_list.setCurrentRow(0)
+
+    def setup_background_animation(self):
+        self.color_index = 0
+        self.pastel_colors = [
+            "#FDEDEC", "#E8F8F5", "#EBF5FB", "#FEF9E7", "#F5EEF8", "#F9EBEA"
+        ]
+        self.bg_timer = QTimer(self)
+        self.bg_timer.timeout.connect(self.animate_background)
+        self.bg_timer.start(3000)
+
+    def animate_background(self):
+        color = self.pastel_colors[self.color_index % len(self.pastel_colors)]
+        self.setStyleSheet(f"background-color: {color};")
+        self.color_index += 1
 
     def filter_topics(self, text):
         self.topic_list.clear()
@@ -191,7 +210,7 @@ class CivicEducationApp(QMainWindow):
         self.content_card.show()
 
         animation = QPropertyAnimation(self.content_card, b"windowOpacity")
-        animation.setDuration(300)
+        animation.setDuration(500)
         animation.setStartValue(0.0)
         animation.setEndValue(1.0)
         animation.setEasingCurve(QEasingCurve.InOutQuad)
@@ -206,7 +225,7 @@ class CivicEducationApp(QMainWindow):
         self.chat_input.clear()
 
         if self.gemini_model is None:
-            self.chat_display.append("<b>Gemini:</b> ⚠️ Chat feature not available.")
+            self.chat_display.append("<b>Gemini:</b> \u26a0\ufe0f Chat feature not available.")
             return
 
         try:
@@ -214,10 +233,11 @@ class CivicEducationApp(QMainWindow):
             response = chat.send_message(user_input)
             reply = response.text.strip()
         except Exception as e:
-            reply = f"⚠️ Error: {str(e)}"
+            reply = f"\u26a0\ufe0f Error: {str(e)}"
             print(f"Gemini error: {e}")
 
         self.chat_display.append(f"<b>Gemini:</b> {reply}")
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
