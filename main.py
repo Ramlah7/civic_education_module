@@ -1,25 +1,52 @@
 import sys
 import json
 import os
+from dotenv import load_dotenv
+import google.generativeai as genai
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout,
     QHBoxLayout, QListWidget, QTextBrowser, QLineEdit, QPushButton, QFrame, QLabel
 )
 from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QColor, QPalette
+
 
 class CivicEducationApp(QMainWindow):
+
     def __init__(self):
         super().__init__()
+
         self.setWindowTitle("Civic Education System")
         self.resize(1000, 600)
+
+        load_dotenv()
+        api_key = os.getenv("GEMINI_API_KEY")
+
+        if not api_key:
+            print("Error: GEMINI_API_KEY not found in your .env file.")
+            sys.exit(1)
+
+        try:
+            genai.configure(api_key=api_key)
+            self.gemini_model = genai.GenerativeModel("models/gemini-2.0-flash")
+            print(f"Successfully configured Gemini model: {self.gemini_model.model_name}")
+        except Exception as e:
+            print(f"Error configuring Gemini model: {e}")
+            self.gemini_model = None
 
         self.topics = self.load_topics()
         self.init_ui()
 
     def load_topics(self):
-        with open("topics.json", "r", encoding="utf-8") as f:
-            return json.load(f)
+        try:
+            with open("topics.json", "r", encoding="utf-8") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            print("Error: topics.json not found.")
+            return {"Welcome": "Welcome to the Civic Education System!"}
+        except json.JSONDecodeError:
+            print("Error: topics.json format issue.")
+            return {"Welcome": "Welcome! Topics file is corrupted."}
 
     def init_ui(self):
         container = QWidget()
@@ -27,17 +54,16 @@ class CivicEducationApp(QMainWindow):
 
         outer_layout = QVBoxLayout(container)
 
-        # Title Header
-        self.title = QLabel("📘 Civic Education System")
+        self.title = QLabel("\U0001F4D8 Civic Education System")
         self.title.setAlignment(Qt.AlignCenter)
         self.title.setStyleSheet("""
             QLabel {
-                font-size: 28px;
+                font-size: 32px;
                 font-weight: bold;
-                padding: 14px;
-                color: #1F4E79;
-                background-color: #E3F2FD;
-                border-bottom: 2px solid #90CAF9;
+                color: #1F3A64;
+                background-color: #AED6F1;
+                padding: 16px;
+                border-bottom: 2px solid #2980B9;
             }
         """)
         outer_layout.addWidget(self.title)
@@ -45,57 +71,158 @@ class CivicEducationApp(QMainWindow):
         layout = QHBoxLayout()
         outer_layout.addLayout(layout)
 
-        # Sidebar
         sidebar = QVBoxLayout()
         self.search_bar = QLineEdit()
         self.search_bar.setPlaceholderText("Search topics...")
         self.search_bar.textChanged.connect(self.filter_topics)
+        self.search_bar.setStyleSheet("""
+            QLineEdit {
+                padding: 12px;
+                border-radius: 12px;
+                border: 1px solid #3498DB;
+                font-size: 16px;
+            }
+        """)
         sidebar.addWidget(self.search_bar)
 
         self.topic_list = QListWidget()
-        self.topic_list.addItems(self.topics.keys())
+        self.topic_list.addItems(sorted(set(self.topics.keys()) | {"Ask Your Question 🤖"}))
         self.topic_list.currentTextChanged.connect(self.display_topic)
+        self.topic_list.setStyleSheet("""
+            QListWidget {
+                border: none;
+                font-size: 16px;
+                background-color: #ECF0F1;
+                padding: 10px;
+            }
+            QListWidget::item:selected {
+                background-color: #2980B9;
+                color: white;
+            }
+        """)
         sidebar.addWidget(self.topic_list)
 
         layout.addLayout(sidebar, 2)
 
-        # Main content area
+        self.content_stack = QVBoxLayout()
+        layout.addLayout(self.content_stack, 5)
+
         self.content_card = QTextBrowser()
         self.content_card.setOpenExternalLinks(True)
         self.content_card.setFrameShape(QFrame.StyledPanel)
         self.content_card.setStyleSheet("""
             QTextBrowser {
-                background-color: #ffffff;
-                border-radius: 15px;
-                padding: 15px;
-                font-size: 14px;
-                font-family: Segoe UI, sans-serif;
+                background-color: #F7F9F9;
+                border-radius: 18px;
+                padding: 24px;
+                font-size: 16px;
+                font-family: 'Segoe UI';
+                border: 1px solid #BDC3C7;
             }
         """)
 
-        layout.addWidget(self.content_card, 5)
+        self.chat_box = QWidget()
+        chat_layout = QVBoxLayout(self.chat_box)
 
-        # Default selection
+        self.chat_display = QTextBrowser()
+        self.chat_display.setStyleSheet("""
+            QTextBrowser {
+                background-color: #F4F6F6;
+                border-radius: 12px;
+                padding: 20px;
+                font-size: 15px;
+                font-family: 'Segoe UI';
+                border: 1px solid #BDC3C7;
+            }
+        """)
+
+        self.chat_input = QLineEdit()
+        self.chat_input.setPlaceholderText("Ask your civic question...")
+        self.chat_input.setStyleSheet("""
+            QLineEdit {
+                border: 1px solid #3498DB;
+                border-radius: 10px;
+                padding: 12px;
+                font-size: 15px;
+            }
+        """)
+
+        self.chat_send = QPushButton("Send")
+        self.chat_send.clicked.connect(self.handle_chat)
+        self.chat_send.setStyleSheet("""
+            QPushButton {
+                background-color: #1ABC9C;
+                color: white;
+                border-radius: 12px;
+                padding: 12px 24px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #16A085;
+            }
+        """)
+
+        chat_layout.addWidget(self.chat_display)
+        chat_layout.addWidget(self.chat_input)
+        chat_layout.addWidget(self.chat_send)
+
+        self.chat_box.hide()
+
+        self.content_stack.addWidget(self.content_card)
+        self.content_stack.addWidget(self.chat_box)
+
         self.topic_list.setCurrentRow(0)
 
     def filter_topics(self, text):
         self.topic_list.clear()
-        filtered = [title for title in self.topics.keys() if text.lower() in title.lower()]
-        self.topic_list.addItems(filtered)
+        filtered = [t for t in self.topics if text.lower() in t.lower()]
+        self.topic_list.addItems(sorted(filtered + ["Ask Your Question 🤖"]))
 
     def display_topic(self, topic):
-        content = self.topics.get(topic, "No information available.")
-        self.animate_topic(content)
+        if topic == "Ask Your Question 🤖":
+            self.content_card.hide()
+            self.chat_box.show()
+            self.chat_display.setText("\u2728 Welcome! Ask your civic education question below.")
+        else:
+            content = self.topics.get(topic, "No content found for this topic.")
+            self.chat_box.hide()
+            self.content_card.show()
+            self.animate_topic(content)
 
     def animate_topic(self, new_text):
-        self.content_card.setText("")  # Clear for fade
+        self.content_card.hide()
+        self.content_card.setHtml(new_text)
+        self.content_card.show()
+
         animation = QPropertyAnimation(self.content_card, b"windowOpacity")
-        animation.setDuration(200)
+        animation.setDuration(500)
         animation.setStartValue(0.0)
         animation.setEndValue(1.0)
         animation.setEasingCurve(QEasingCurve.InOutQuad)
         animation.start()
-        self.content_card.setHtml(new_text)
+
+    def handle_chat(self):
+        user_input = self.chat_input.text().strip()
+        if not user_input:
+            return
+
+        self.chat_display.append(f"<b>You:</b> {user_input}")
+        self.chat_input.clear()
+
+        if self.gemini_model is None:
+            self.chat_display.append("<b>Gemini:</b> ⚠️ Chat feature not available.")
+            return
+
+        try:
+            chat = self.gemini_model.start_chat(history=[])
+            response = chat.send_message(user_input)
+            reply = response.text.strip()
+        except Exception as e:
+            reply = f"⚠️ Error: {str(e)}"
+            print(f"Gemini error: {e}")
+
+        self.chat_display.append(f"<b>Gemini:</b> {reply}")
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
