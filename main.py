@@ -10,7 +10,6 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve
 from PyQt5.QtGui import QFont, QColor, QPalette
 
-
 class CivicEducationApp(QMainWindow):
 
     def __init__(self):
@@ -49,6 +48,13 @@ class CivicEducationApp(QMainWindow):
             return {"Welcome": "Welcome! Topics file is corrupted."}
 
     def init_ui(self):
+        primary = "#0D1B2A"
+        secondary = "#1B263B"
+        accent = "#415A77"
+        bg = "#E0E1DD"
+        surface = "#C0C9EE"
+        text_primary = "#0D1B2A"
+
         container = QWidget()
         self.setCentralWidget(container)
 
@@ -56,15 +62,15 @@ class CivicEducationApp(QMainWindow):
 
         self.title = QLabel("\U0001F4D8 Civic Education System")
         self.title.setAlignment(Qt.AlignCenter)
-        self.title.setStyleSheet("""
-            QLabel {
+        self.title.setStyleSheet(f"""
+            QLabel {{
                 font-size: 32px;
                 font-weight: bold;
-                color: #1F3A64;
-                background-color: #AED6F1;
+                color: {bg};
+                background-color: {primary};
                 padding: 16px;
-                border-bottom: 2px solid #2980B9;
-            }
+                border-bottom: 2px solid {accent};
+            }}
         """)
         outer_layout.addWidget(self.title)
 
@@ -75,30 +81,33 @@ class CivicEducationApp(QMainWindow):
         self.search_bar = QLineEdit()
         self.search_bar.setPlaceholderText("Search topics...")
         self.search_bar.textChanged.connect(self.filter_topics)
-        self.search_bar.setStyleSheet("""
-            QLineEdit {
+        self.search_bar.setStyleSheet(f"""
+            QLineEdit {{
                 padding: 12px;
                 border-radius: 12px;
-                border: 1px solid #3498DB;
+                border: 1px solid {accent};
                 font-size: 16px;
-            }
+                color: {text_primary};
+                background-color: {surface};
+            }}
         """)
         sidebar.addWidget(self.search_bar)
 
         self.topic_list = QListWidget()
-        self.topic_list.addItems(sorted(set(self.topics.keys()) | {"Ask Your Question 🤖"}))
+        self.topic_list.addItems(sorted(set(self.topics.keys()) | {"Ask Your Question 🧠"}))
         self.topic_list.currentTextChanged.connect(self.display_topic)
-        self.topic_list.setStyleSheet("""
-            QListWidget {
+        self.topic_list.setStyleSheet(f"""
+            QListWidget {{
                 border: none;
                 font-size: 16px;
-                background-color: #ECF0F1;
+                background-color: {bg};
                 padding: 10px;
-            }
-            QListWidget::item:selected {
-                background-color: #2980B9;
-                color: white;
-            }
+                color: {text_primary};
+            }}
+            QListWidget::item:selected {{
+                background-color: {accent};
+                color: {bg};
+            }}
         """)
         sidebar.addWidget(self.topic_list)
 
@@ -110,56 +119,60 @@ class CivicEducationApp(QMainWindow):
         self.content_card = QTextBrowser()
         self.content_card.setOpenExternalLinks(True)
         self.content_card.setFrameShape(QFrame.StyledPanel)
-        self.content_card.setStyleSheet("""
-            QTextBrowser {
-                background-color: #F7F9F9;
+        self.content_card.setStyleSheet(f"""
+            QTextBrowser {{
+                background-color: {bg};
                 border-radius: 18px;
                 padding: 24px;
                 font-size: 16px;
                 font-family: 'Segoe UI';
-                border: 1px solid #BDC3C7;
-            }
+                border: 1px solid {surface};
+                color: {text_primary};
+            }}
         """)
 
         self.chat_box = QWidget()
         chat_layout = QVBoxLayout(self.chat_box)
 
         self.chat_display = QTextBrowser()
-        self.chat_display.setStyleSheet("""
-            QTextBrowser {
-                background-color: #F4F6F6;
+        self.chat_display.setStyleSheet(f"""
+            QTextBrowser {{
+                background-color: {surface};
                 border-radius: 12px;
                 padding: 20px;
                 font-size: 15px;
                 font-family: 'Segoe UI';
-                border: 1px solid #BDC3C7;
-            }
+                border: 1px solid {surface};
+                color: {bg};
+            }}
         """)
 
         self.chat_input = QLineEdit()
         self.chat_input.setPlaceholderText("Ask your civic question...")
-        self.chat_input.setStyleSheet("""
-            QLineEdit {
-                border: 1px solid #3498DB;
+        self.chat_input.setStyleSheet(f"""
+            QLineEdit {{
+                border: 1px solid {accent};
                 border-radius: 10px;
                 padding: 12px;
                 font-size: 15px;
-            }
+                color: {text_primary};
+                background-color: white;
+            }}
         """)
 
         self.chat_send = QPushButton("Send")
         self.chat_send.clicked.connect(self.handle_chat)
-        self.chat_send.setStyleSheet("""
-            QPushButton {
-                background-color: #1ABC9C;
+        self.chat_send.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {accent};
                 color: white;
                 border-radius: 12px;
                 padding: 12px 24px;
                 font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #16A085;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {secondary};
+            }}
         """)
 
         chat_layout.addWidget(self.chat_display)
@@ -176,10 +189,10 @@ class CivicEducationApp(QMainWindow):
     def filter_topics(self, text):
         self.topic_list.clear()
         filtered = [t for t in self.topics if text.lower() in t.lower()]
-        self.topic_list.addItems(sorted(filtered + ["Ask Your Question 🤖"]))
+        self.topic_list.addItems(sorted(filtered + ["Ask Your Question 🧠"]))
 
     def display_topic(self, topic):
-        if topic == "Ask Your Question 🤖":
+        if topic == "Ask Your Question 🧠":
             self.content_card.hide()
             self.chat_box.show()
             self.chat_display.setText("\u2728 Welcome! Ask your civic education question below.")
@@ -222,7 +235,6 @@ class CivicEducationApp(QMainWindow):
             print(f"Gemini error: {e}")
 
         self.chat_display.append(f"<b>Gemini:</b> {reply}")
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
