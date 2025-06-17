@@ -143,7 +143,7 @@ class CivicEducationApp(QMainWindow):
                 font-size: 15px;
                 font-family: 'Segoe UI';
                 border: 1px solid {surface};
-                color: {bg};
+                color: "030303";
             }}
         """)
 
