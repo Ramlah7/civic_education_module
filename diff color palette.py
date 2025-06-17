@@ -48,12 +48,12 @@ class CivicEducationApp(QMainWindow):
             return {"Welcome": "Welcome! Topics file is corrupted."}
 
     def init_ui(self):
-        primary = "#4A148C"
-        secondary = "#7B1FA2"
-        accent = "#CE93D8"
-        bg = "#F3E5F5"
-        surface = "#E1BEE7"
-        text_primary = "#1A0033"
+        primary = "#2E7D32"         # Forest Green
+        secondary = "#388E3C"       # Medium Green
+        accent = "#66BB6A"          # Light Green
+        bg = "#E8F5E9"              # Minty Background
+        surface = "#C8E6C9"         # Pale Panel
+        text_primary = "#1B5E20"     # Dark Green Text
 
         container = QWidget()
         self.setCentralWidget(container)
@@ -66,7 +66,7 @@ class CivicEducationApp(QMainWindow):
             QLabel {{
                 font-size: 32px;
                 font-weight: bold;
-                color: {bg};
+                color: white;
                 background-color: {primary};
                 padding: 16px;
                 border-bottom: 2px solid {accent};
@@ -106,7 +106,7 @@ class CivicEducationApp(QMainWindow):
             }}
             QListWidget::item:selected {{
                 background-color: {secondary};
-                color: {bg};
+                color: white;
             }}
         """)
         sidebar.addWidget(self.topic_list)

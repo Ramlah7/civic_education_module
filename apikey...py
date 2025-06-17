@@ -48,12 +48,12 @@ class CivicEducationApp(QMainWindow):
             return {"Welcome": "Welcome! Topics file is corrupted."}
 
     def init_ui(self):
-        primary = "#1F3A64"
-        secondary = "#AED6F1"
-        accent = "#1ABC9C"
-        bg = "#F7F9F9"
-        surface = "#F4F6F6"
-        text_primary = "#17202A"
+        primary = "#0D1B2A"
+        secondary = "#1B263B"
+        accent = "#415A77"
+        bg = "#E0E1DD"
+        surface = "#778DA9"
+        text_primary = "#0D1B2A"
 
         container = QWidget()
         self.setCentralWidget(container)
@@ -66,10 +66,10 @@ class CivicEducationApp(QMainWindow):
             QLabel {{
                 font-size: 32px;
                 font-weight: bold;
-                color: {text_primary};
-                background-color: {secondary};
+                color: {bg};
+                background-color: {primary};
                 padding: 16px;
-                border-bottom: 2px solid {primary};
+                border-bottom: 2px solid {accent};
             }}
         """)
         outer_layout.addWidget(self.title)
@@ -85,7 +85,7 @@ class CivicEducationApp(QMainWindow):
             QLineEdit {{
                 padding: 12px;
                 border-radius: 12px;
-                border: 1px solid {primary};
+                border: 1px solid {accent};
                 font-size: 16px;
                 color: {text_primary};
                 background-color: {surface};
@@ -105,8 +105,8 @@ class CivicEducationApp(QMainWindow):
                 color: {text_primary};
             }}
             QListWidget::item:selected {{
-                background-color: {primary};
-                color: white;
+                background-color: {accent};
+                color: {bg};
             }}
         """)
         sidebar.addWidget(self.topic_list)
@@ -143,7 +143,7 @@ class CivicEducationApp(QMainWindow):
                 font-size: 15px;
                 font-family: 'Segoe UI';
                 border: 1px solid {surface};
-                color: {text_primary};
+                color: {bg};
             }}
         """)
 
@@ -151,7 +151,7 @@ class CivicEducationApp(QMainWindow):
         self.chat_input.setPlaceholderText("Ask your civic question...")
         self.chat_input.setStyleSheet(f"""
             QLineEdit {{
-                border: 1px solid {primary};
+                border: 1px solid {accent};
                 border-radius: 10px;
                 padding: 12px;
                 font-size: 15px;
@@ -171,7 +171,7 @@ class CivicEducationApp(QMainWindow):
                 font-weight: bold;
             }}
             QPushButton:hover {{
-                background-color: {primary};
+                background-color: {secondary};
             }}
         """)
 
@@ -223,7 +223,7 @@ class CivicEducationApp(QMainWindow):
         self.chat_input.clear()
 
         if self.gemini_model is None:
-            self.chat_display.append("<b>Gemini:</b> \u26a0\ufe0f Chat feature not available.")
+            self.chat_display.append("<b>Gemini:</b> ⚠️ Chat feature not available.")
             return
 
         try:
@@ -231,7 +231,7 @@ class CivicEducationApp(QMainWindow):
             response = chat.send_message(user_input)
             reply = response.text.strip()
         except Exception as e:
-            reply = f"\u26a0\ufe0f Error: {str(e)}"
+            reply = f"⚠️ Error: {str(e)}"
             print(f"Gemini error: {e}")
 
         self.chat_display.append(f"<b>Gemini:</b> {reply}")
